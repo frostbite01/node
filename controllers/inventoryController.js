@@ -1,10 +1,25 @@
+const db = require('../models');  // Add this line at the top
+
 // Generic controller for all inventory items
 const createInventoryController = (Model, modelName) => {
   return {
-    // Get all items
+    // Get all items with their images
     getAll: async (req, res) => {
       try {
-        const items = await Model.findAll();
+        const items = await Model.findAll({
+          include: [
+            { model: db.Location, as: 'locationInfo' },
+            { model: db.Department, as: 'departmentInfo' },
+            { 
+              model: db.Image, 
+              as: 'images',
+              where: {
+                inventoryType: modelName
+              },
+              required: false
+            }
+          ]
+        });
         return res.status(200).json(items);
       } catch (error) {
         console.error(`Error fetching ${modelName}:`, error);
@@ -12,15 +27,28 @@ const createInventoryController = (Model, modelName) => {
       }
     },
 
-    // Get item by ID
+    // Get item by ID with its images
     getById: async (req, res) => {
       try {
-        const item = await Model.findByPk(req.params.id);
-        
+        const item = await Model.findByPk(req.params.id, {
+          include: [
+            { model: db.Location, as: 'locationInfo' },
+            { model: db.Department, as: 'departmentInfo' },
+            { 
+              model: db.Image, 
+              as: 'images',
+              where: {
+                inventoryType: modelName
+              },
+              required: false
+            }
+          ]
+        });
+
         if (!item) {
           return res.status(404).json({ message: `${modelName} not found` });
         }
-        
+
         return res.status(200).json(item);
       } catch (error) {
         console.error(`Error fetching ${modelName}:`, error);
@@ -116,4 +144,4 @@ const createInventoryController = (Model, modelName) => {
   };
 };
 
-module.exports = createInventoryController; 
+module.exports = createInventoryController;

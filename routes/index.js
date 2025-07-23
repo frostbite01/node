@@ -5,13 +5,20 @@ const router = express.Router();
 const userRoutes = require('./userRoutes');
 const inventoryRoutes = require('./inventoryRoutes');
 const authRoutes = require('./authRoutes');
+const taskRoutes = require('./taskRoutes');
+const locationRoutes = require('./locationRoutes');
+const departmentRoutes = require('./departmentRoutes');
+const commonRoutes = require('./commonRoutes');
+const documentRoutes = require('./documentRoutes'); // lowercase 'd'
 
 // Use route modules
+router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/inventory', inventoryRoutes);
-router.use('/auth', authRoutes);
+router.use('/tasks', taskRoutes);
+router.use('/locations', locationRoutes);
+router.use('/departments', departmentRoutes);
+router.use('/common', commonRoutes);
+router.use('/documents', documentRoutes);
 
-// Add more routes as needed
-// router.use('/posts', postRoutes);
-
-module.exports = router; 
+module.exports = router;

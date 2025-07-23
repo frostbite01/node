@@ -1,9 +1,15 @@
+const { Op } = require('sequelize'); // Import Op from sequelize
+
 module.exports = (sequelize, DataTypes) => {
   const Switch = sequelize.define('Switch', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
+    },
+    asset_id: {
+      type: DataTypes.STRING(10),
+      allowNull: true
     },
     name: {
       type: DataTypes.STRING(100),
@@ -25,21 +31,21 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: true
     },
-    vlan_supported: {
-      type: DataTypes.BOOLEAN,
-      allowNull: true
+    locationId: { // Foreign key for Location
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'location', // Use the table name
+        key: 'id'
+      }
     },
-    poe_supported: {
-      type: DataTypes.BOOLEAN,
-      allowNull: true
-    },
-    location: {
-      type: DataTypes.STRING(255),
-      allowNull: true
-    },
-    assigned_to: {
-      type: DataTypes.STRING(100),
-      allowNull: true
+    departmentId: { // Foreign key for Department
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'department', // Use the table name
+        key: 'id'
+      }
     },
     status: {
       type: DataTypes.ENUM('active', 'inactive', 'maintenance'),
@@ -55,8 +61,30 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'switch',
-    timestamps: true
+    timestamps: true,
+    hooks: {
+      beforeCreate: async (sw, options) => {
+        const assetType = 'SW'; // Fixed asset type for Switches
+
+        // Use a transaction to ensure atomicity
+        await sequelize.transaction(async (t) => {
+          const [assetIdRecord, created] = await sequelize.models.AssetId.findOrCreate({
+            where: { asset_type: assetType },
+            defaults: { next_id: 1 },
+            transaction: t
+          });
+
+          const nextId = assetIdRecord.next_id;
+          const assetId = `${assetType}${String(nextId).padStart(4, '0')}`;
+
+          // Increment the next_id value
+          await assetIdRecord.update({ next_id: nextId + 1 }, { transaction: t });
+
+          sw.asset_id = assetId;
+        });
+      }
+    }
   });
 
   return Switch;
-}; 
+};

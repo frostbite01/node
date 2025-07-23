@@ -1,6 +1,65 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { User } = require('../models');
+const { Op } = require('sequelize');
+
+// Register user
+exports.register = async (req, res) => {
+  try {
+    const { username, name, email, password, role } = req.body;
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ 
+      where: { 
+        [Op.or]: [{ username }, { email }] 
+      } 
+    });
+    
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+    
+    // Create new user
+    const newUser = await User.create({
+      name,
+      username,
+      email,
+      password, // In production, hash this password!
+      role: role || 'user', // Default to 'user' if not specified
+      isActive: true
+    });
+    
+    // Create JWT payload
+    const payload = {
+      id: newUser.id,
+      username: newUser.username,
+      role: newUser.role
+    };
+    
+    // Sign token
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' },
+      (err, token) => {
+        if (err) throw err;
+        res.status(201).json({
+          success: true,
+          token: `Bearer ${token}`,
+          user: {
+            id: newUser.id,
+            username: newUser.username,
+            email: newUser.email,
+            role: newUser.role
+          }
+        });
+      }
+    );
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 // Login user
 exports.login = async (req, res) => {
@@ -64,53 +123,78 @@ exports.login = async (req, res) => {
   }
 };
 
-// Register user (for testing purposes)
-exports.register = async (req, res) => {
+// Get user profile
+exports.getProfile = async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
-
-    // Check if user already exists
-    const existingUser = await User.findOne({ where: { username } });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
-
-    // For simplicity, we're storing plain text passwords
-    // In a real application, you should hash passwords:
-    // const hashedPassword = await bcrypt.hash(password, 10);
+    // req.user is set by the authenticate middleware
+    const user = req.user;
     
-    const newUser = await User.create({
-      username,
-      email,
-      password, // should be hashedPassword in production
-      role: role || 'user',
-      isActive: true
-    });
-
     // Don't return the password
-    const { password: _, ...userWithoutPassword } = newUser.toJSON();
+    const { password, ...userWithoutPassword } = user.toJSON();
     
-    res.status(201).json(userWithoutPassword);
+    return res.status(200).json(userWithoutPassword);
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Get profile error:', error);
+    return res.status(500).json({ message: 'Server error' });
   }
 };
 
-// Get current user
-exports.getCurrentUser = async (req, res) => {
+// Update user profile (self)
+exports.updateProfile = async (req, res) => {
   try {
-    const user = await User.findByPk(req.user.id, {
-      attributes: { exclude: ['password'] }
+    const user = req.user;
+    const { email, phoneNumber } = req.body;
+    
+    // Only allow updating certain fields for self
+    await user.update({
+      email,
+      phoneNumber
     });
     
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    // Don't return the password
+    const { password, ...userWithoutPassword } = user.toJSON();
+    
+    return res.status(200).json(userWithoutPassword);
+  } catch (error) {
+    console.error('Update profile error:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Placeholder for other auth methods
+exports.logout = (req, res) => {
+  // JWT is stateless, so logout is handled client-side
+  // by removing the token
+  res.status(200).json({ message: 'Logged out successfully' });
+};
+
+exports.forgotPassword = (req, res) => {
+  // Implementation would send reset email
+  res.status(200).json({ message: 'Password reset email sent' });
+};
+
+exports.resetPassword = (req, res) => {
+  // Implementation would verify token and reset password
+  res.status(200).json({ message: 'Password reset successfully' });
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = req.user;
+    
+    // Verify current password
+    const isMatch = currentPassword === user.password;
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
     }
     
-    res.json(user);
+    // Update password
+    await user.update({ password: newPassword });
+    
+    res.status(200).json({ message: 'Password changed successfully' });
   } catch (error) {
-    console.error('Get current user error:', error);
+    console.error('Change password error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-}; 
+};

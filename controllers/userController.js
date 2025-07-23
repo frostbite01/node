@@ -1,4 +1,5 @@
 const { User } = require('../models');
+const { Op } = require('sequelize');
 
 // Get all users
 exports.getAllUsers = async (req, res) => {
@@ -31,18 +32,20 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-// Create a new user
+// Create a new user (admin function)
 exports.createUser = async (req, res) => {
   try {
     const { 
       username, 
+      name,      // Add name field
       email, 
       password, 
       role, 
       employeeId, 
       department, 
       position, 
-      phoneNumber
+      phoneNumber,
+      isActive
     } = req.body;
     
     // For employees, password can be null
@@ -52,13 +55,15 @@ exports.createUser = async (req, res) => {
     
     const newUser = await User.create({
       username,
+      name,        // Add name field
       email,
-      password, // In a real app, hash this password!
+      password,    // In a real app, hash this password!
       role,
       employeeId,
       department,
       position,
-      phoneNumber
+      phoneNumber,
+      isActive: isActive !== undefined ? isActive : true
     });
     
     // Don't return the password
@@ -66,17 +71,20 @@ exports.createUser = async (req, res) => {
     
     return res.status(201).json(userWithoutPassword);
   } catch (error) {
-    console.error(error);
+    console.error('Error creating user:', error);  // Add better error logging
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ 
         message: 'User already exists with that username, email, or employee ID' 
       });
     }
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ 
+      message: 'Server error',
+      error: error.message  // Add error message to response
+    });
   }
 };
 
-// Update user
+// Update user (admin function)
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -97,6 +105,7 @@ exports.updateUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     
+    // Update user fields
     await user.update({
       username,
       email,
@@ -108,25 +117,17 @@ exports.updateUser = async (req, res) => {
       isActive
     });
     
-    return res.status(200).json({ 
-      message: 'User updated successfully',
-      user: {
-        ...user.toJSON(),
-        password: undefined
-      }
-    });
+    // Don't return the password
+    const { password: _, ...userWithoutPassword } = user.toJSON();
+    
+    return res.status(200).json(userWithoutPassword);
   } catch (error) {
     console.error(error);
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      return res.status(400).json({ 
-        message: 'That username, email, or employee ID is already in use' 
-      });
-    }
     return res.status(500).json({ message: 'Server error' });
   }
 };
 
-// Delete user
+// Delete user (admin function)
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -146,13 +147,46 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// Get all employees
+// Update user status (activate/deactivate)
+exports.updateUserStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+    
+    if (isActive === undefined) {
+      return res.status(400).json({ message: 'isActive field is required' });
+    }
+    
+    const user = await User.findByPk(id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    await user.update({ isActive });
+    
+    return res.status(200).json({ 
+      message: `User ${isActive ? 'activated' : 'deactivated'} successfully`,
+      user: {
+        id: user.id,
+        username: user.username,
+        isActive: user.isActive
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get employees only
 exports.getEmployees = async (req, res) => {
   try {
     const employees = await User.findAll({
       where: { role: 'employee' },
       attributes: { exclude: ['password'] }
     });
+    
     return res.status(200).json(employees);
   } catch (error) {
     console.error(error);
@@ -200,4 +234,4 @@ exports.createEmployee = async (req, res) => {
     }
     return res.status(500).json({ message: 'Server error' });
   }
-}; 
+};

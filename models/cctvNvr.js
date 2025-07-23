@@ -1,9 +1,15 @@
+const { Op } = require('sequelize'); // Import Op from sequelize
+
 module.exports = (sequelize, DataTypes) => {
   const CctvNvr = sequelize.define('CctvNvr', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
+    },
+    asset_id: {
+      type: DataTypes.STRING(10),
+      allowNull: true
     },
     name: {
       type: DataTypes.STRING(100),
@@ -17,21 +23,21 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(100),
       allowNull: true
     },
-    ip_address: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    storage_capacity: {
-      type: DataTypes.STRING(100),
-      allowNull: true
-    },
-    channel_count: {
+    locationId: { // Foreign key for Location
       type: DataTypes.INTEGER,
-      allowNull: true
+      allowNull: true,
+      references: {
+        model: 'location', // Use the table name
+        key: 'id'
+      }
     },
-    location: {
-      type: DataTypes.STRING(255),
-      allowNull: true
+    departmentId: { // Foreign key for Department
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'department', // Use the table name
+        key: 'id'
+      }
     },
     status: {
       type: DataTypes.ENUM('active', 'inactive', 'maintenance'),
@@ -47,8 +53,30 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'cctv_nvr',
-    timestamps: true
+    timestamps: true,
+    hooks: {
+      beforeCreate: async (cctvNvr, options) => {
+        const assetType = 'CN'; // Fixed asset type for CCTV NVRs
+
+        // Use a transaction to ensure atomicity
+        await sequelize.transaction(async (t) => {
+          const [assetIdRecord, created] = await sequelize.models.AssetId.findOrCreate({
+            where: { asset_type: assetType },
+            defaults: { next_id: 1 },
+            transaction: t
+          });
+
+          const nextId = assetIdRecord.next_id;
+          const assetId = `${assetType}${String(nextId).padStart(4, '0')}`;
+
+          // Increment the next_id value
+          await assetIdRecord.update({ next_id: nextId + 1 }, { transaction: t });
+
+          cctvNvr.asset_id = assetId;
+        });
+      }
+    }
   });
 
   return CctvNvr;
-}; 
+};

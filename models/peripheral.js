@@ -1,9 +1,15 @@
+const { Op } = require('sequelize'); // Import Op from sequelize
+
 module.exports = (sequelize, DataTypes) => {
   const Peripheral = sequelize.define('Peripheral', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
+    },
+    asset_id: {
+      type: DataTypes.STRING(10),
+      allowNull: true
     },
     name: {
       type: DataTypes.STRING(100),
@@ -21,9 +27,21 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('keyboard', 'mouse', 'monitor', 'headset', 'speaker', 'other'),
       allowNull: true
     },
-    assigned_to: {
-      type: DataTypes.STRING(100),
-      allowNull: true
+    locationId: { // Foreign key for Location
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'location', // Use the table name
+        key: 'id'
+      }
+    },
+    departmentId: { // Foreign key for Department
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'department', // Use the table name
+        key: 'id'
+      }
     },
     status: {
       type: DataTypes.ENUM('active', 'inactive', 'maintenance'),
@@ -39,8 +57,30 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'peripheral',
-    timestamps: true
+    timestamps: true,
+    hooks: {
+      beforeCreate: async (peripheral, options) => {
+        const assetType = 'PER'; // Fixed asset type for Peripherals
+
+        // Use a transaction to ensure atomicity
+        await sequelize.transaction(async (t) => {
+          const [assetIdRecord, created] = await sequelize.models.AssetId.findOrCreate({
+            where: { asset_type: assetType },
+            defaults: { next_id: 1 },
+            transaction: t
+          });
+
+          const nextId = assetIdRecord.next_id;
+          const assetId = `${assetType}${String(nextId).padStart(4, '0')}`;
+
+          // Increment the next_id value
+          await assetIdRecord.update({ next_id: nextId + 1 }, { transaction: t });
+
+          peripheral.asset_id = assetId;
+        });
+      }
+    }
   });
 
   return Peripheral;
-}; 
+};
