@@ -2,25 +2,26 @@ const fs = require('fs-extra');
 const path = require('path');
 const { SignedDocument } = require('../models');
 
-// Create signed documents directory
-const signedDocsDir = path.join(__dirname, '../uploads/signed-documents');
-fs.ensureDirSync(signedDocsDir);
-
 exports.uploadSignedDocument = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No signed document uploaded' });
     }
 
+    const userId = req.user.id;
+    const relativePath = path.relative('uploads', req.file.path);
+
     const signedDoc = await SignedDocument.create({
       fileName: req.file.originalname,
       filePath: req.file.path,
-      uploadedBy: req.user.id // From auth middleware
+      uploadedBy: userId,
+      userPath: relativePath // Store relative path for easier user directory management
     });
 
     res.status(201).json({
       message: 'Signed document uploaded successfully',
-      documentId: signedDoc.id
+      documentId: signedDoc.id,
+      path: relativePath
     });
   } catch (error) {
     console.error('Error uploading signed document:', error);
@@ -31,7 +32,14 @@ exports.uploadSignedDocument = async (req, res) => {
 exports.getSignedDocument = async (req, res) => {
   try {
     const { id } = req.params;
-    const signedDoc = await SignedDocument.findByPk(id);
+    const userId = req.user.id;
+    
+    const signedDoc = await SignedDocument.findOne({
+      where: {
+        id,
+        uploadedBy: userId // Ensure user can only access their own documents
+      }
+    });
 
     if (!signedDoc) {
       return res.status(404).json({ message: 'Signed document not found' });

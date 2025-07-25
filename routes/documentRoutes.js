@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const signedDocumentController = require('../controllers/signedDocumentController');
-const documentController = require('../controllers/documentController');
 const { authenticate } = require('../middlewares/auth');
 const uploadDocument = require('../middlewares/uploadDocument');
+const documentController = require('../controllers/documentController'); // Fixed casing
 
 // Get all available templates
 router.get('/templates', authenticate, documentController.getTemplates);

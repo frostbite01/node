@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
+    userPath: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
     uploadedBy: {
       type: DataTypes.INTEGER,  // From auth middleware
       allowNull: false
