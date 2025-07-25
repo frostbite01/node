@@ -4,7 +4,7 @@ const PizZip = require('pizzip');
 const Docxtemplater = require('docxtemplater');
 
 // Create templates directory if it doesn't exist
-const templatesDir = path.join(__dirname, '../templates');
+const templatesDir = path.join(__dirname, '../uploads/templates');
 const outputDir = path.join(__dirname, '../generated-docs');
 
 fs.ensureDirSync(templatesDir);
