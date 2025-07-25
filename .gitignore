@@ -1,5 +1,5 @@
 node_modules
 .env
 uploads
-generated-docs
-templates
+generated-docs/
+templates/

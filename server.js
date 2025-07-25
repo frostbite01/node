@@ -82,8 +82,8 @@ const startServer = async () => {
     // First, create the database if it doesn't exist
     await db.initializeDatabase();
 
-    // Remove alter:true to prevent duplicate index creation
-    await db.sequelize.sync({ force: false });
+    // Force sync all models
+    await db.sequelize.sync({ force: true });
     console.log('Database synchronized successfully');
 
     // Start the server

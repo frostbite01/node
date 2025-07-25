@@ -16,9 +16,9 @@ exports.authenticate = async (req, res, next) => {
     // Find user
     const user = await User.findByPk(decoded.id);
     
-    if (!user) {
-      return res.status(401).json({ message: 'User not found' });
-    }
+    // Add debug logs
+    console.log('Auth middleware - Token decoded:', decoded);
+    console.log('Auth middleware - User found:', user?.id);
     
     // Check if user is active
     if (!user.isActive) {
@@ -53,4 +53,4 @@ exports.isUser = (req, res, next) => {
   } else {
     return res.status(403).json({ message: 'Access denied: User role required' });
   }
-}; 
+};
