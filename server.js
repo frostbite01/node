@@ -83,7 +83,7 @@ const startServer = async () => {
     await db.initializeDatabase();
 
     // Force sync all models
-    await db.sequelize.sync({ force: true });
+    await db.sequelize.sync({ force: false });
     console.log('Database synchronized successfully');
 
     // Start the server

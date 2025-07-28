@@ -17,9 +17,13 @@ router.post('/templates/:templateName/fill', authenticate, documentController.fi
 // Upload new template
 router.post('/templates/upload', authenticate, uploadDocument.single('template'), documentController.uploadTemplate);
 
+
 // Signed document routes
 router.post('/signed/upload', authenticate, uploadDocument.single('signedDocument'), signedDocumentController.uploadSignedDocument);
-router.get('/signed/:id', authenticate, signedDocumentController.getSignedDocument);
+router.get('/signed/user', authenticate, signedDocumentController.getUserSignedDocuments); // put this first
+router.get('/signed/:id', authenticate, signedDocumentController.getSignedDocument);  // put this after
 router.get('/signed', authenticate, signedDocumentController.getAllSignedDocuments);
+router.delete('/signed/:id', authenticate, signedDocumentController.deleteSignedDocument);
+
 
 module.exports = router;

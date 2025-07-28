@@ -63,3 +63,43 @@ exports.getAllSignedDocuments = async (req, res) => {
     res.status(500).json({ message: 'Error fetching signed documents' });
   }
 };
+
+// controller
+exports.getUserSignedDocuments = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const docs = await SignedDocument.findAll({
+      where: { uploadedBy: userId }
+    });
+
+    res.json(docs); // send to frontend
+  } catch (error) {
+    console.error('Error fetching user documents:', error);
+    res.status(500).json({ message: 'Error fetching documents' });
+  }
+};
+
+exports.deleteSignedDocument = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const signedDoc = await SignedDocument.findOne({
+      where: {
+        id,
+        uploadedBy: userId // Ensure user can only delete their own documents
+      }
+    });
+
+    if (!signedDoc) {
+      return res.status(404).json({ message: 'Signed document not found' });
+    }
+
+    await signedDoc.destroy();
+    res.json({ message: 'Signed document deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting signed document:', error);
+    res.status(500).json({ message: 'Error deleting signed document' });
+  }
+};
