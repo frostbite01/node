@@ -23,6 +23,9 @@ const storage = multer.diskStorage({
       uploadPath = userBase;
     } else if (req.path.includes('/images')) {
       uploadPath = path.join(userBase, 'images');
+    } else if (req.path.includes('/templates/upload')) {
+      // For template uploads, use /uploads/templates directory
+      uploadPath = path.join(__dirname, '../uploads/templates');
     } else {
       uploadPath = path.join(userBase, 'documents');
     }
@@ -46,7 +49,13 @@ const storage = multer.diskStorage({
     const timestamp = Date.now();
     const ext = path.extname(file.originalname);
     const name = path.basename(file.originalname, ext);
-    cb(null, `${name}_${timestamp}${ext}`);
+    
+    // For templates, use original filename to avoid conflicts
+    if (req.path.includes('/templates/upload')) {
+      cb(null, file.originalname);
+    } else {
+      cb(null, `${name}_${timestamp}${ext}`);
+    }
   }
 });
 
