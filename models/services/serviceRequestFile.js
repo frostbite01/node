@@ -1,33 +1,41 @@
 module.exports = (sequelize, DataTypes) => {
-  const ServiceRequest = sequelize.define('ServiceRequest', {
+  const ServiceRequestFile = sequelize.define('ServiceRequestFile', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
     },
-    serviceTypeId: {
+    serviceRequestId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'service_types',
+        model: 'service_requests',
         key: 'id'
       }
     },
-    userId: {
+    requirementId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
-        model: 'users',
+        model: 'service_requirements',
         key: 'id'
       }
     },
-    formData: {
-      type: DataTypes.JSON,
+    fileName: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    filePath: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    fileSize: {
+      type: DataTypes.INTEGER,
       allowNull: true
     },
-    status: {
+    mimeType: {
       type: DataTypes.STRING,
-      defaultValue: 'pending'
+      allowNull: true
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -38,8 +46,8 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: DataTypes.NOW
     }
   }, {
-    tableName: 'service_requests'
+    tableName: 'service_request_files'
   });
 
-  return ServiceRequest;
-};
+  return ServiceRequestFile;
+}; 

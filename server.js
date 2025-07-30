@@ -11,6 +11,7 @@ dotenv.config();
 const routes = require('./routes');
 const userRoutes = require('./routes/userRoutes');
 const imageRoutes = require('./routes/imageRoutes');
+const serviceRoutes = require('./routes/serviceRoutes');
 
 // Initialize express app
 const app = express();
@@ -66,6 +67,7 @@ app.use('/generated-docs', express.static('generated-docs'));
 app.use('/api', routes);
 app.use('/users', userRoutes);
 app.use('/api/images', imageRoutes);
+app.use('/api/services', serviceRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

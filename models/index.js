@@ -3,10 +3,6 @@ const path = require('path');
 const Sequelize = require('sequelize');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
-const Service = require('./services/service')(sequelize, Sequelize.DataTypes);
-const RequestFile = require('./services/requestFile')(sequelize, Sequelize.DataTypes);
-const ServiceRequest = require('./services/serviceRequest')(sequelize, Sequelize.DataTypes);
-
 
 const config = require('../config/database.js')[env];
 const db = {};
@@ -51,7 +47,7 @@ let sequelize = new Sequelize(
   }
 );
 
-// Load all models
+// Load all models from main directory
 fs
   .readdirSync(__dirname)
   .filter(file => {
@@ -62,14 +58,26 @@ fs
     db[model.name] = model;
   });
 
-// Set up associations
+// Load service models from services directory
+const ServiceType = require('./services/serviceType')(sequelize, Sequelize.DataTypes);
+const ServiceRequirement = require('./services/serviceRequirement')(sequelize, Sequelize.DataTypes);
+const ServiceRequest = require('./services/serviceRequest')(sequelize, Sequelize.DataTypes);
+const ServiceRequestFile = require('./services/serviceRequestFile')(sequelize, Sequelize.DataTypes);
+
+// Add service models to db object
+db.ServiceType = ServiceType;
+db.ServiceRequirement = ServiceRequirement;
+db.ServiceRequest = ServiceRequest;
+db.ServiceRequestFile = ServiceRequestFile;
+
+// Set up associations AFTER all models are loaded
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
   }
 });
 
-// Define associations
+// Define inventory associations
 db.Location.hasMany(db.Switch, { foreignKey: 'locationId' });
 db.Department.hasMany(db.Switch, { foreignKey: 'departmentId' });
 db.Switch.belongsTo(db.Location, { foreignKey: 'locationId', as: 'locationInfo' });
@@ -144,25 +152,31 @@ inventoryModels.forEach(modelName => {
 });
 
 // === Service Request Related Associations ===
-db.Service = Service;
-db.RequestFile = RequestFile;
-db.ServiceRequest = ServiceRequest;
+// Only set up service associations if the models exist
+if (db.ServiceType && db.ServiceRequirement) {
+  db.ServiceType.hasMany(db.ServiceRequirement, { foreignKey: 'serviceTypeId' });
+  db.ServiceRequirement.belongsTo(db.ServiceType, { foreignKey: 'serviceTypeId' });
+}
 
-db.ServiceType.hasMany(db.ServiceRequirement, { foreignKey: 'serviceTypeId' });
-db.ServiceRequirement.belongsTo(db.ServiceType, { foreignKey: 'serviceTypeId' });
+if (db.ServiceType && db.ServiceRequest) {
+  db.ServiceType.hasMany(db.ServiceRequest, { foreignKey: 'serviceTypeId' });
+  db.ServiceRequest.belongsTo(db.ServiceType, { foreignKey: 'serviceTypeId' });
+}
 
-db.ServiceType.hasMany(db.ServiceRequest, { foreignKey: 'serviceTypeId' });
-db.ServiceRequest.belongsTo(db.ServiceType, { foreignKey: 'serviceTypeId' });
+if (db.User && db.ServiceRequest) {
+  db.User.hasMany(db.ServiceRequest, { foreignKey: 'userId' });
+  db.ServiceRequest.belongsTo(db.User, { foreignKey: 'userId' });
+}
 
-db.User.hasMany(db.ServiceRequest, { foreignKey: 'userId' });
-db.ServiceRequest.belongsTo(db.User, { foreignKey: 'userId' });
+if (db.ServiceRequest && db.ServiceRequestFile) {
+  db.ServiceRequest.hasMany(db.ServiceRequestFile, { foreignKey: 'serviceRequestId' });
+  db.ServiceRequestFile.belongsTo(db.ServiceRequest, { foreignKey: 'serviceRequestId' });
+}
 
-db.ServiceRequest.hasMany(db.ServiceRequestFile, { foreignKey: 'serviceRequestId' });
-db.ServiceRequestFile.belongsTo(db.ServiceRequest, { foreignKey: 'serviceRequestId' });
-
-db.ServiceRequirement.hasMany(db.ServiceRequestFile, { foreignKey: 'requirementId' });
-db.ServiceRequestFile.belongsTo(db.ServiceRequirement, { foreignKey: 'requirementId' });
-
+if (db.ServiceRequirement && db.ServiceRequestFile) {
+  db.ServiceRequirement.hasMany(db.ServiceRequestFile, { foreignKey: 'requirementId' });
+  db.ServiceRequestFile.belongsTo(db.ServiceRequirement, { foreignKey: 'requirementId' });
+}
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
