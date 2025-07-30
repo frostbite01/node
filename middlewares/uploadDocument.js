@@ -11,6 +11,8 @@ const storage = multer.diskStorage({
     
     // Get user ID from JWT token
     const userId = req.user.id;
+    const userName = req.user.name;
+    const userRole = req.user.role;
     
     // Define base paths with absolute path to avoid directory issues
     const userBase = path.join(__dirname, '../uploads/users', userId.toString());

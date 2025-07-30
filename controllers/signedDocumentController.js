@@ -9,12 +9,16 @@ exports.uploadSignedDocument = async (req, res) => {
     }
 
     const userId = req.user.id;
+    const userName = req.user.name;
+    const userRole = req.user.role;
     const relativePath = path.relative('uploads', req.file.path);
 
     const signedDoc = await SignedDocument.create({
       fileName: req.file.originalname,
       filePath: req.file.path,
       uploadedBy: userId,
+      name: userName,
+      role: userRole,
       userPath: relativePath // Store relative path for easier user directory management
     });
 

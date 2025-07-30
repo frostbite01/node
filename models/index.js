@@ -3,6 +3,11 @@ const path = require('path');
 const Sequelize = require('sequelize');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
+const Service = require('./services/service')(sequelize, Sequelize.DataTypes);
+const RequestFile = require('./services/requestFile')(sequelize, Sequelize.DataTypes);
+const ServiceRequest = require('./services/serviceRequest')(sequelize, Sequelize.DataTypes);
+
+
 const config = require('../config/database.js')[env];
 const db = {};
 
@@ -137,6 +142,27 @@ inventoryModels.forEach(modelName => {
     as: modelName.toLowerCase()
   });
 });
+
+// === Service Request Related Associations ===
+db.Service = Service;
+db.RequestFile = RequestFile;
+db.ServiceRequest = ServiceRequest;
+
+db.ServiceType.hasMany(db.ServiceRequirement, { foreignKey: 'serviceTypeId' });
+db.ServiceRequirement.belongsTo(db.ServiceType, { foreignKey: 'serviceTypeId' });
+
+db.ServiceType.hasMany(db.ServiceRequest, { foreignKey: 'serviceTypeId' });
+db.ServiceRequest.belongsTo(db.ServiceType, { foreignKey: 'serviceTypeId' });
+
+db.User.hasMany(db.ServiceRequest, { foreignKey: 'userId' });
+db.ServiceRequest.belongsTo(db.User, { foreignKey: 'userId' });
+
+db.ServiceRequest.hasMany(db.ServiceRequestFile, { foreignKey: 'serviceRequestId' });
+db.ServiceRequestFile.belongsTo(db.ServiceRequest, { foreignKey: 'serviceRequestId' });
+
+db.ServiceRequirement.hasMany(db.ServiceRequestFile, { foreignKey: 'requirementId' });
+db.ServiceRequestFile.belongsTo(db.ServiceRequirement, { foreignKey: 'requirementId' });
+
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
