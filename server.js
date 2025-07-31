@@ -84,8 +84,15 @@ const startServer = async () => {
     // First, create the database if it doesn't exist
     await db.initializeDatabase();
 
+    // Disable foreign key checks before force sync
+    await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+
     // Force sync all models
-    await db.sequelize.sync({ force: false });
+    await db.sequelize.sync({ force: true });
+
+    // Re-enable foreign key checks
+    await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+
     console.log('Database synchronized successfully');
 
     // Start the server
