@@ -25,9 +25,26 @@ exports.createSubmission = async (req, res) => {
     const { formId } = req.params;
     const { data } = req.body;
 
-    const form = await Form.findByPk(formId, { lock: true });
+    // Get form with its serial number placeholder
+    const form = await Form.findByPk(formId, { 
+      lock: true,
+      include: [{
+        model: Placeholder,
+        where: { key_name: 'serial_number' },
+        required: false
+      }]
+    });
+
     if (!form) {
       return res.status(404).json({ message: 'Form not found' });
+    }
+
+    // Get serial placeholder ID
+    const serialPlaceholder = form.Placeholders[0];
+    if (!serialPlaceholder) {
+      return res.status(500).json({ 
+        message: 'Form missing serial number placeholder' 
+      });
     }
 
     // Generate next serial number
@@ -43,7 +60,7 @@ exports.createSubmission = async (req, res) => {
     const submissionData = [
       {
         submission_id: submission.id,
-        placeholder_id: form.serial_placeholder_id, // New field in Form model
+        placeholder_id: serialPlaceholder.id, // Use the actual placeholder ID
         value: serialNumber
       },
       ...data.map(d => ({

@@ -24,6 +24,10 @@ module.exports = (sequelize, DataTypes) => {
     last_serial: {
       type: DataTypes.INTEGER,
       defaultValue: 0 // Track last used number for this form
+    },
+    serial_placeholder_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true // Allow null initially, will be set after creating placeholder
     }
   });
 
