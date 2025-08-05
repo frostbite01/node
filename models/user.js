@@ -70,6 +70,11 @@ module.exports = (sequelize, DataTypes) => {
 
   // Define associations here
   User.associate = function(models) {
+    // Add this association
+    User.hasMany(models.WifiRequestForm, {
+      foreignKey: 'submitted_by',
+      as: 'wifiRequests'
+    });
     // For example: User.hasMany(models.Asset)
   };
 

@@ -10,6 +10,7 @@ const locationRoutes = require('./locationRoutes');
 const departmentRoutes = require('./departmentRoutes');
 const commonRoutes = require('./commonRoutes');
 const documentRoutes = require('./documentRoutes'); // lowercase 'd'
+const wifiRequestRoutes = require('./wifiRequestRoutes');
 
 // Use route modules
 router.use('/auth', authRoutes);
@@ -20,5 +21,6 @@ router.use('/locations', locationRoutes);
 router.use('/departments', departmentRoutes);
 router.use('/common', commonRoutes);
 router.use('/documents', documentRoutes);
+router.use('/wifi-requests', wifiRequestRoutes);
 
 module.exports = router;

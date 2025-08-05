@@ -12,7 +12,7 @@ const routes = require('./routes');
 const userRoutes = require('./routes/userRoutes');
 const imageRoutes = require('./routes/imageRoutes');
 
-// Initialize express app
+// Initialize express appc
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -69,10 +69,10 @@ const startServer = async () => {
     await db.initializeDatabase();
 
     // Drop all tables forcibly
-    await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
-    await db.sequelize.drop();
-    await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
-    console.log('Semua tabel berhasil dihapus.');
+    // await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+    // await db.sequelize.drop();
+    // await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+    // console.log('Semua tabel berhasil dihapus.');
 
     // Sync ulang database
     await db.sequelize.sync({ force: false });
