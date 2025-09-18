@@ -11,6 +11,9 @@ const departmentRoutes = require('./departmentRoutes');
 const commonRoutes = require('./commonRoutes');
 const documentRoutes = require('./documentRoutes'); // lowercase 'd'
 const wifiRequestRoutes = require('./wifiRequestRoutes');
+const cctvRequestRoutes = require('./cctvRequestRoutes');
+const softwareRequestRoutes = require('./softwareRequestRoutes');
+const formExportRoutes = require('./formExport');
 
 // Use route modules
 router.use('/auth', authRoutes);
@@ -22,5 +25,8 @@ router.use('/departments', departmentRoutes);
 router.use('/common', commonRoutes);
 router.use('/documents', documentRoutes);
 router.use('/wifi-requests', wifiRequestRoutes);
+router.use('/cctv-requests', cctvRequestRoutes);
+router.use('/software-requests', softwareRequestRoutes);
+router.use('/api', formExportRoutes);
 
 module.exports = router;

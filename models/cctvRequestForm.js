@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  const WifiRequestForm = sequelize.define('WifiRequestForm', {
+  const CCTVRequestForm = sequelize.define('CCTVRequestForm', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -14,25 +14,16 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: DataTypes.NOW
     },
-    // Request type
-    pengguna_baru: {
-      type: DataTypes.STRING,
-      defaultValue: '' // Store "✓" or "" for checkbox
-    },
-    pergantian_mac: {
+        // Device type
+    komputer: {
       type: DataTypes.STRING,
       defaultValue: ''
     },
-    // Device type fields as strings to store check marks
-    komputer: {
-      type: DataTypes.STRING,
-      defaultValue: '' // Can store "✓" for checked
-    },
     laptop: {
       type: DataTypes.STRING,
-      defaultValue: '' // Can store "✓" for checked
+      defaultValue: ''
     },
-    handphone: {
+       handphone: {
       type: DataTypes.STRING,
       defaultValue: '' // Can store "✓" for checked
     },
@@ -54,24 +45,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    // Location
-    mess: DataTypes.STRING,
-    diluar: DataTypes.STRING,
-    alamat: DataTypes.STRING,
-    // Device details
-    brand: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    type: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    mac: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    serial: {
+    lokasi: {
       type: DataTypes.STRING,
       allowNull: false
     },
@@ -79,8 +53,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    hari: DataTypes.STRING,
-    te: DataTypes.STRING,
+    disetujui: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
     diketahui: DataTypes.STRING,
     submitted_by: {
       type: DataTypes.INTEGER,
@@ -91,27 +67,27 @@ module.exports = (sequelize, DataTypes) => {
     },
     status: {
       type: DataTypes.STRING,
-      defaultValue: 'pending', // pending, approved, rejected
+      defaultValue: 'pending',
       allowNull: false
     }
   }, {
-    tableName: 'wifi_request_forms',
+    tableName: 'cctv_request_forms',
     hooks: {
       beforeCreate: async (form) => {
-        const count = await sequelize.models.WifiRequestForm.count();
+        const count = await sequelize.models.CCTVRequestForm.count();
         const month = 'IX'; // You might want to make this dynamic
         const year = '2025'; // You might want to make this dynamic
-        form.serial_number = `${String(count + 1).padStart(3, '0')}/A-WiFi/ICT-COE/${month}/${year}`;
+        form.serial_number = `${String(count + 1).padStart(3, '0')}/A-CCTV/ICT-COE/${month}/${year}`;
       }
     }
   });
 
-  WifiRequestForm.associate = function(models) {
-    WifiRequestForm.belongsTo(models.User, {
+  CCTVRequestForm.associate = function(models) {
+    CCTVRequestForm.belongsTo(models.User, {
       foreignKey: 'submitted_by',
       as: 'submitter'
     });
   };
 
-  return WifiRequestForm;
+  return CCTVRequestForm;
 };

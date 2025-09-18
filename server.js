@@ -54,6 +54,10 @@ app.use('/api', routes);
 app.use('/users', userRoutes);
 app.use('/api/images', imageRoutes);
 
+//formd download route
+const formExportRoutes = require('./routes/formExport');
+app.use('/api', formExportRoutes);
+
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);

@@ -27,7 +27,7 @@ exports.getAllRequests = async (req, res) => {
       include: [{
         model: User,
         as: 'submitter',
-        attributes: ['username', 'name']
+        attributes: ['username', 'name', 'employeeId', 'department', 'position', 'phoneNumber']
       }],
       order: [['createdAt', 'DESC']]
     });
@@ -46,7 +46,7 @@ exports.getRequestById = async (req, res) => {
       include: [{
         model: User,
         as: 'submitter',
-        attributes: ['username', 'name']
+        attributes: ['username', 'name', 'employeeId', 'department', 'position', 'phoneNumber']
       }]
     });
 
@@ -73,7 +73,7 @@ exports.getMyRequests = async (req, res) => {
       include: [{
         model: User,
         as: 'submitter',
-        attributes: ['username', 'name']
+        attributes: ['username', 'name', 'employeeId', 'department', 'position', 'phoneNumber']
       }],
       order: [['createdAt', 'DESC']]
     });
@@ -104,7 +104,7 @@ exports.getUserRequests = async (req, res) => {
       include: [{
         model: User,
         as: 'submitter',
-        attributes: ['username', 'name', 'department']
+        attributes: ['username', 'name', 'employeeId', 'department', 'position', 'phoneNumber']
       }],
       order: [['createdAt', 'DESC']]
     });
